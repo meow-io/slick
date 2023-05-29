@@ -435,13 +435,13 @@ p1+desc, p2+desc               = the [group description](#113-group-description)
            sig3=sign(s1, hmac(s, n || id1 || e2+pub || e1+pub))
 4          [prekey pass4](#1120-prekey-pass4)
      <---- n
-           d1=sym(k2, serialized inner prekey information for p2+desc)
+           d1=sym(k2, serialized prekey inner for p2+desc)
 5          [prekey pass5](#1121-prekey-pass5)
      ----> n
-           d2=sym(k1, serialized inner prekey information for p1+desc)
+           d2=sym(k1, serialized prekey inner for p1+desc)
 ```
 
-The group description sent MUST be a full copy of the description. This is used as a basis for further merges within that SESSION. Failure to send a full description could lead to an inconsistent state.
+[Prekey inner](#1122-prekey-inner) is used for representing the serialized data for stage 4 and 5, and MUST be validly signed by the intro key of the sending party. The group description sent MUST be a full copy of the description. This is used as a basis for further merges within that SESSION. Failure to send a full description could lead to an inconsistent state.
 
 To determine which ephemeral key to use as an input to the double ratchet, both ephemeral keys are sorted lexicographically. Then, `hmac(e2 ^ e1+pub, "PREKEY_SELECT_KEY")` is calculated. If the first bit is 0, the first key is used, otherwise, the second key is used. The session key used as an input is `hmac(e2 ^ e1+pub, "PREKEY_SESSION_KEY")`.
 
