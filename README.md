@@ -338,7 +338,6 @@ After the initial sending of [jpake pass1](#1110-jpake-pass1) all further data i
 ^    = dh operation
 ||   = concat (prefixed with 4-byte little endian length)
 hmac = hmac-sha256(key, message)
-hash = sha256 digest
 sym  = ChaCha20-Poly1305(key, nonce, plain)
 
 p1             = party 1
@@ -347,9 +346,9 @@ e1, e2         = ephemeral keys
 e1+pub, e2+pub = corresponding public keys of e1, e2
 K              = value specified in J-PAKE rfc
 K'             = hmac(K, "SESSION") (session key)
-Kc             = hash(K' || "SLICK_KC") (session key confirmation)
-k1             = hash(e1 ^ e2+pub || "JPAKE_CONFIRM_KEY_1")
-k2             = hash(e2 ^ e1+pub || "JPAKE_CONFIRM_KEY_2")
+Kc             = hmac(K', "SLICK_KC") (session key confirmation)
+k1             = hmac(e1 ^ e2+pub, "JPAKE_CONFIRM_KEY_1")
+k2             = hmac(e2 ^ e1+pub, "JPAKE_CONFIRM_KEY_2")
 
   p1                          p2
            (out of band)
@@ -394,23 +393,22 @@ The double ratchet uses pk1 as the x25519 key as the asymmetric key and `K'` as 
 
 When a GROUP DESCRIPTION contains a membership without an established session, the MEMBER with the lexicographically lower member id begins establishing a session with the other party. If member ids are equal, then the member with the lower identity id is the initiator. A prekey handshake is initiated by sending a [prekey pass1](#1117-prekey-pass1). Implementors SHOULD hold onto unrecognized prekey handshakes for some length of time as prekey handshakes can be sent before the receiver has a new group description to correspond to the initiator of the prekey handshake.
 
-The authentication is based on the SIGMA[^sigma] key authentication scheme. When a prekey1 is initially sent, it has a signature that is used by the other party to attest to the legitamacy of the prekey session request, but is not used for any other purpose. A monotonic nonce is sent by the initiating party to prevent replay attacks. The nonce used by MUST be greater than any previous successfully used nonce. Any prekey1 sent with an older nonce SHOULD be ignored.
+The authentication is based on the SIGMA[^sigma] key authentication scheme. When a prekey1 is initially sent, it has a signature that is used by the other party to attest to the legitamacy of the prekey session request, but is not used for any other purpose. A monotonic nonce is sent by the initiating party to prevent replay attacks. The initiating party maintains a nonce that is unique to both parties. The nonce used by MUST be greater than any previous successfully used nonce. Any prekey1 sent with an older nonce SHOULD be ignored.
 
 ```
 ^      = dh operation
 ||     = concat (prefixed with 4-byte little endian length)
 hmac   = hmac-sha256(key, message)
 sym    = ChaCha20-Poly1305(key, plain) with zero-nonce
-hash   = sha256 digest
 
 p1                             = party 1
 p2                             = party 2
 id1                            = identity_id1 || membership_id1
 id2                            = identity_id2 || membership_id2
 n                              = 16-byte nonce
-s                              = hash(e1 ^ e2+pub || "PREKEY_MAC_KEY")
-k1                             = hash(e1 ^ e2+pub || "PREKEY_CONFIRM_KEY" || id1)
-k2                             = hash(e2 ^ e1+pub || "PREKEY_CONFIRM_KEY" || id2)
+s                              = hmac(e1 ^ e2+pub, "PREKEY_MAC_KEY")
+k1                             = hmac(e1 ^ e2+pub, "PREKEY_CONFIRM_KEY" || id1)
+k2                             = hmac(e2 ^ e1+pub, "PREKEY_CONFIRM_KEY" || id2)
 e1, e2                         = ephemeral keys
 e1+pub, e2+pub                 = corresponding public keys of e1, e2
 p1+desc, p2+desc               = the [group description](#113-group-description)s used to initiate the session
@@ -439,7 +437,7 @@ p1+desc, p2+desc               = the [group description](#113-group-description)
 
 The group description sent MUST be a full copy of the description. This is used as a basis for further merges within that SESSION. Failure to send a full description could lead to an inconsistent state.
 
-To determine which ephemeral key to use as an input to the double ratchet, both ephemeral keys are sorted lexicographically. Then, `hash(e2 ^ e1+pub || "PREKEY_SESSION_KEY")` is calculated. If the first bit is 0, the first key is used, otherwise, the second key is used. The session key used as an input is `hash(e2 ^ e1+pub || "PREKEY_SESSION_KEY")`.
+To determine which ephemeral key to use as an input to the double ratchet, both ephemeral keys are sorted lexicographically. Then, `hmac(e2 ^ e1+pub, "PREKEY_SELECT_KEY")` is calculated. If the first bit is 0, the first key is used, otherwise, the second key is used. The session key used as an input is `hmac(e2 ^ e1+pub, "PREKEY_SESSION_KEY")`.
 
 ## 7. Messaging
 
