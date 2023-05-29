@@ -337,14 +337,14 @@ Jpake sessions are initiated by sending the [jpake pass1](#1110-jpake-pass1) to 
 After the initial sending of [jpake pass1](#1110-jpake-pass1) all further data is transmitted using the endpoints specified by each party in [jpake pass1](#1110-jpake-pass1) and [jpake pass2](#1111-jpake-pass2). The jpake handshake performs explicit key confirmation on pass 5 and pass 6, using `k' = hmac(K, "SLICK_KC")` as the key to confirm where K is the session key. Both parties MUST pick unique ephemeral keys, that is, not reuse any previously used key.
 
 ```
-^    = dh operation
+^    = dh operation using X25519
 ||   = concat (prefixed with 4-byte little endian length)
 hmac = hmac-sha256(key, message)
 sym  = ChaCha20-Poly1305(key, nonce, plain)
 
 p1             = party 1
 p2             = party 2
-e1, e2         = ephemeral keys
+e1, e2         = ephemeral X25519 private keys
 e1+pub, e2+pub = corresponding public keys of e1, e2
 K              = value specified in J-PAKE rfc
 K'             = hmac(K, "SLICK_SESSION") (session key)
@@ -398,7 +398,7 @@ When a GROUP DESCRIPTION contains a membership without an established session, t
 The authentication is based on the SIGMA[^sigma] key authentication scheme. When a prekey1 is initially sent, it has a signature that is used by the other party to attest to the legitamacy of the prekey session request, but is not used for any other purpose. A monotonic nonce is sent by the initiating party to prevent replay attacks. The initiating party maintains a nonce that is unique to both parties. The nonce used by MUST be greater than any previous successfully used nonce. Any prekey1 sent with an older nonce SHOULD be ignored. Both parties MUST pick unique ephemeral keys, that is, not reuse any previously used key.
 
 ```
-^      = dh operation
+^      = dh operation using X25519
 ||     = concat (prefixed with 4-byte little endian length)
 hmac   = hmac-sha256(key, message)
 sym    = ChaCha20-Poly1305(key, plain) with zero-nonce
@@ -408,13 +408,13 @@ p1                             = party 1
 p2                             = party 2
 id1                            = identity_id1 || membership_id1
 id2                            = identity_id2 || membership_id2
-s1                             = party 1's private intro key
-s2                             = party 2's private intro key
+s1                             = party 1's private Ed25519 intro key
+s2                             = party 2's private Ed25519 intro key
 n                              = 16-byte nonce
 s                              = hmac(e1 ^ e2+pub, "PREKEY_MAC_KEY")
 k1                             = hmac(e1 ^ e2+pub, "PREKEY_CONFIRM_KEY" || id1)
 k2                             = hmac(e2 ^ e1+pub, "PREKEY_CONFIRM_KEY" || id2)
-e1, e2                         = ephemeral keys
+e1, e2                         = ephemeral X25519 private keys
 e1+pub, e2+pub                 = corresponding public keys of e1, e2
 p1+desc, p2+desc               = the [group description](#113-group-description)s used to initiate the session
                                  from p1 and p2 respectively
