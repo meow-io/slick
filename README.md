@@ -332,7 +332,7 @@ In the event of a SESSION already being established between two MEMBERSHIPS, any
 
 #### 6.5.1. Jpake handshake
 
-Jpake sessions are initiated by sending the [jpake pass1](#1110-jpake-pass1) to your intended recipient out-of-band, that is, through some other communication channel. The secret value being confirmed is `hmac(r, "SECRET")` where `r` is a randomly selected value by p1 and communicated out-of-band.
+Jpake sessions are initiated by sending the [jpake pass1](#1110-jpake-pass1) to your intended recipient out-of-band, that is, through some other communication channel. The secret value being confirmed is `hmac(r, "SLICK_SECRET")` where `r` is a randomly selected value by p1 and communicated out-of-band.
 
 After the initial sending of [jpake pass1](#1110-jpake-pass1) all further data is transmitted using the endpoints specified by each party in [jpake pass1](#1110-jpake-pass1) and [jpake pass2](#1111-jpake-pass2). The jpake handshake performs explicit key confirmation on pass 5 and pass 6, using `k' = hmac(K, "SLICK_KC")` as the key to confirm where K is the session key. Both parties MUST pick unique ephemeral keys, that is, not reuse any previously used key.
 
@@ -347,10 +347,10 @@ p2             = party 2
 e1, e2         = ephemeral keys
 e1+pub, e2+pub = corresponding public keys of e1, e2
 K              = value specified in J-PAKE rfc
-K'             = hmac(K, "SESSION") (session key)
+K'             = hmac(K, "SLICK_SESSION") (session key)
 Kc             = hmac(K', "SLICK_KC") (session key confirmation)
-k1             = hmac(e1 ^ e2+pub, "JPAKE_CONFIRM_KEY_1")
-k2             = hmac(e2 ^ e1+pub, "JPAKE_CONFIRM_KEY_2")
+sk1            = hmac(e1 ^ e2+pub, "JPAKE_SECRET_KEY_1")
+sk2            = hmac(e2 ^ e1+pub, "JPAKE_SECRET_KEY_2")
 
   p1                          p2
            (out of band)
@@ -383,10 +383,10 @@ k2             = hmac(e2 ^ e1+pub, "JPAKE_CONFIRM_KEY_2")
 5          [jpake pass5](#1114-jpake-pass5)
       ---> id=16-byte random id from pass 1
            c=key confirmation hmac(Kc, "KC_1_U" || u2 || u1 || G3 || G4 || G1 || G2)
-           i=sym(k1, inner jpake information (inner jpake))
+           i=sym(sk1, inner jpake information (inner jpake))
 6          [jpake pass6](#1115-jpake-pass6) <---
       <--- id=16-byte random id from pass 1
-           i=sym(k2, inner jpake information (inner jpake))
+           i=sym(sk2, inner jpake information (inner jpake))
 ```
 
 The double ratchet uses pk1 as the x25519 key as the asymmetric key and `K'` as the symmetric key.
