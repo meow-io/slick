@@ -334,7 +334,7 @@ In the event of a SESSION already being established between two MEMBERSHIPS, any
 
 Jpake sessions are initiated by sending the [jpake pass1](#1110-jpake-pass1) to your intended recipient out-of-band, that is, through some other communication channel. The secret value being confirmed is `hmac(r, "SECRET")` where `r` is a randomly selected value by p1 and communicated out-of-band.
 
-After the initial sending of [jpake pass1](#1110-jpake-pass1) all further data is transmitted using the endpoints specified by each party in [jpake pass1](#1110-jpake-pass1) and [jpake pass2](#1111-jpake-pass2). The jpake handshake performs explicit key confirmation on pass 5 and pass 6, using `k' = KDF(K || "SLICK_KC")` as the key to confirm where K is the session key. Both parties MUST pick unique ephemeral keys, that is, not reuse any previously used key.
+After the initial sending of [jpake pass1](#1110-jpake-pass1) all further data is transmitted using the endpoints specified by each party in [jpake pass1](#1110-jpake-pass1) and [jpake pass2](#1111-jpake-pass2). The jpake handshake performs explicit key confirmation on pass 5 and pass 6, using `k' = hmac(K, "SLICK_KC")` as the key to confirm where K is the session key. Both parties MUST pick unique ephemeral keys, that is, not reuse any previously used key.
 
 ```
 ^    = dh operation
