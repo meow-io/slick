@@ -328,6 +328,8 @@ A SESSION is used to encrypt all messages sent between members using any of the 
 
 Each member of a SESSION maintains a sequence number which is used when sending messages directly between them. As well, each member maintains a record of which messages have been acked by the other member. Each member must also retain the last group description sent by the other party.
 
+In the event of a SESSION already being established between two MEMBERSHIPS, any further attempts to initiate a SESSION SHOULD be ignored. Failure to do would allow the SESSION to be hijacked in the case where a private intro key is lost.
+
 #### 6.5.1. Jpake handshake
 
 Jpake sessions are initiated by sending the [jpake pass1](#1110-jpake-pass1) to your intended recipient out-of-band, that is, through some other communication channel. The secret value being confirmed is `hmac(r, "SECRET")` where `r` is a randomly selected value by p1 and communicated out-of-band.
