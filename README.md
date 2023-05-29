@@ -332,7 +332,7 @@ Each member of a SESSION maintains a sequence number which is used when sending 
 
 Jpake sessions are initiated by sending the [jpake pass1](#1110-jpake-pass1) to your intended recipient out-of-band, that is, through some other communication channel. The secret value being confirmed is `hmac(r, "SECRET")` where `r` is a randomly selected value by p1 and communicated out-of-band.
 
-After the initial sending of [jpake pass1](#1110-jpake-pass1) all further data is transmitted using the endpoints specified by each party in [jpake pass1](#1110-jpake-pass1) and [jpake pass2](#1111-jpake-pass2). The jpake handshake performs explicit key confirmation on pass 5 and pass 6, using `k' = KDF(K || "SLICK_KC")` as the key to confirm where K is the session key.
+After the initial sending of [jpake pass1](#1110-jpake-pass1) all further data is transmitted using the endpoints specified by each party in [jpake pass1](#1110-jpake-pass1) and [jpake pass2](#1111-jpake-pass2). The jpake handshake performs explicit key confirmation on pass 5 and pass 6, using `k' = KDF(K || "SLICK_KC")` as the key to confirm where K is the session key. Both parties MUST pick unique ephemeral keys, that is, not reuse any previously used key.
 
 ```
 ^    = dh operation
@@ -393,18 +393,21 @@ The double ratchet uses pk1 as the x25519 key as the asymmetric key and `K'` as 
 
 When a GROUP DESCRIPTION contains a membership without an established session, the MEMBER with the lexicographically lower member id begins establishing a session with the other party. If member ids are equal, then the member with the lower identity id is the initiator. A prekey handshake is initiated by sending a [prekey pass1](#1117-prekey-pass1). Implementors SHOULD hold onto unrecognized prekey handshakes for some length of time as prekey handshakes can be sent before the receiver has a new group description to correspond to the initiator of the prekey handshake.
 
-The authentication is based on the SIGMA[^sigma] key authentication scheme. When a prekey1 is initially sent, it has a signature that is used by the other party to attest to the legitamacy of the prekey session request, but is not used for any other purpose. A monotonic nonce is sent by the initiating party to prevent replay attacks. The initiating party maintains a nonce that is unique to both parties. The nonce used by MUST be greater than any previous successfully used nonce. Any prekey1 sent with an older nonce SHOULD be ignored.
+The authentication is based on the SIGMA[^sigma] key authentication scheme. When a prekey1 is initially sent, it has a signature that is used by the other party to attest to the legitamacy of the prekey session request, but is not used for any other purpose. A monotonic nonce is sent by the initiating party to prevent replay attacks. The initiating party maintains a nonce that is unique to both parties. The nonce used by MUST be greater than any previous successfully used nonce. Any prekey1 sent with an older nonce SHOULD be ignored. Both parties MUST pick unique ephemeral keys, that is, not reuse any previously used key.
 
 ```
 ^      = dh operation
 ||     = concat (prefixed with 4-byte little endian length)
 hmac   = hmac-sha256(key, message)
 sym    = ChaCha20-Poly1305(key, plain) with zero-nonce
+sign   = Ed25519(priv, msg)
 
 p1                             = party 1
 p2                             = party 2
 id1                            = identity_id1 || membership_id1
 id2                            = identity_id2 || membership_id2
+s1                             = party 1's private intro key
+s2                             = party 2's private intro key
 n                              = 16-byte nonce
 s                              = hmac(e1 ^ e2+pub, "PREKEY_MAC_KEY")
 k1                             = hmac(e1 ^ e2+pub, "PREKEY_CONFIRM_KEY" || id1)
