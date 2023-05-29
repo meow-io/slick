@@ -73,26 +73,27 @@
   - [11.19. prekey pass3](#1119-prekey-pass3)
   - [11.20. prekey pass4](#1120-prekey-pass4)
   - [11.21. prekey pass5](#1121-prekey-pass5)
-  - [11.22. group message](#1122-group-message)
-  - [11.23. group message body](#1123-group-message-body)
-  - [11.24. application message](#1124-application-message)
-  - [11.25. device group application message](#1125-device-group-application-message)
-  - [11.26. heya envelope](#1126-heya-envelope)
-  - [11.27. heya interior envelope](#1127-heya-interior-envelope)
-  - [11.28. ratchet message](#1128-ratchet-message)
-  - [11.29. repair message](#1129-repair-message)
-  - [11.30. lost message](#1130-lost-message)
-  - [11.31. private message](#1131-private-message)
-  - [11.32. backfill request](#1132-backfill-request)
-  - [11.33. backfill start](#1133-backfill-start)
-  - [11.34. group acks](#1134-group-acks)
-  - [11.35. ack](#1135-ack)
-  - [11.36. backfill](#1136-backfill)
-  - [11.37. backfill complete](#1137-backfill-complete)
-  - [11.38. backfill abort](#1138-backfill-abort)
-  - [11.39. eav operations](#1139-eav-operations)
-  - [11.40. value](#1140-value)
-  - [11.41. eav backfill](#1141-eav-backfill)
+  - [11.22. prekey inner](#1122-prekey-inner)
+  - [11.23. group message](#1123-group-message)
+  - [11.24. group message body](#1124-group-message-body)
+  - [11.25. application message](#1125-application-message)
+  - [11.26. device group application message](#1126-device-group-application-message)
+  - [11.27. heya envelope](#1127-heya-envelope)
+  - [11.28. heya interior envelope](#1128-heya-interior-envelope)
+  - [11.29. ratchet message](#1129-ratchet-message)
+  - [11.30. repair message](#1130-repair-message)
+  - [11.31. lost message](#1131-lost-message)
+  - [11.32. private message](#1132-private-message)
+  - [11.33. backfill request](#1133-backfill-request)
+  - [11.34. backfill start](#1134-backfill-start)
+  - [11.35. group acks](#1135-group-acks)
+  - [11.36. ack](#1136-ack)
+  - [11.37. backfill](#1137-backfill)
+  - [11.38. backfill complete](#1138-backfill-complete)
+  - [11.39. backfill abort](#1139-backfill-abort)
+  - [11.40. eav operations](#1140-eav-operations)
+  - [11.41. value](#1141-value)
+  - [11.42. eav backfill](#1142-eav-backfill)
 - [12. References](#12-references)
 <!-- /TOC -->
 
@@ -290,7 +291,7 @@ Every MEMBERSHIP has a dictionary of ENDPOINTS, where the dictionary key represe
 
 Endpoints are described with a URL. The scheme of this URL MUST be either "id" or "heya". That scheme indicates which transport is used for sending the message. Transports are expected to handle messages up 1 megabyte in size and implementations SHOULD avoid sending messages larger than that. Transports are also responsible for providing a "from" URL, to allow receivers to indicate who the message is from, however, transports do not need to provide any guarantees as to who the message is from.
 
-As [ratchet message](#1128-ratchet-message)s expose metadata about message counts and order, transports SHOULD attempt to not expose that data to any third parties. Failure to do so would allow third parties to know the frequency of messages sent between two parties.
+As [ratchet message](#1129-ratchet-message)s expose metadata about message counts and order, transports SHOULD attempt to not expose that data to any third parties. Failure to do so would allow third parties to know the frequency of messages sent between two parties.
 
 #### 6.4.1. ID
 
@@ -314,9 +315,9 @@ heya://localhost:10124/svYOX9iIm6tK56yo9S87ZtyK39HgNl3J6wSsjoGCnmk/uLz-SUpV6oijW
 
 The heya URL consists of the following parts: scheme, domain name, port (optionally), public key base64-urlsafe encoded, send token base64-urlsafe encoded.
 
-Messages sent to a heya endpoint are encoded in a [heya envelope](#1126-heya-envelope). This envelope contains an encrypted body and an X25519 public key. The body of that envelope is encrypted with ChaCha20-Poly1305 using a zero nonce with the key derived from the DH operation the public key from the heya url and an ephemeral private key generated for that message. Senders of messages MUST NOT reuse an ephemeral public key used in sending. Failure to do so would leak ratchet metadata and handshake data, but not affect the confidentiality or authenticity of that message.
+Messages sent to a heya endpoint are encoded in a [heya envelope](#1127-heya-envelope). This envelope contains an encrypted body and an X25519 public key. The body of that envelope is encrypted with ChaCha20-Poly1305 using a zero nonce with the key derived from the DH operation the public key from the heya url and an ephemeral private key generated for that message. Senders of messages MUST NOT reuse an ephemeral public key used in sending. Failure to do so would leak ratchet metadata and handshake data, but not affect the confidentiality or authenticity of that message.
 
-The unencrypted body of a message sent to a heya server is encoded using [heya interior envelope](#1127-heya-interior-envelope). This contains from and body fields. Implementors SHOULD use the from and to URLs present in the group description. Failure to do so will result in messages not being delivered.
+The unencrypted body of a message sent to a heya server is encoded using [heya interior envelope](#1128-heya-interior-envelope). This contains from and body fields. Implementors SHOULD use the from and to URLs present in the group description. Failure to do so will result in messages not being delivered.
 
 ### 6.5. Sessions
 
@@ -395,7 +396,7 @@ The double ratchet uses pk1 as the x25519 key as the asymmetric key and `K'` as 
 
 When a GROUP DESCRIPTION contains a membership without an established session, the MEMBER with the lexicographically lower member id begins establishing a session with the other party. If member ids are equal, then the member with the lower identity id is the initiator. A prekey handshake is initiated by sending a [prekey pass1](#1117-prekey-pass1). Implementors SHOULD hold onto unrecognized prekey handshakes for some length of time as prekey handshakes can be sent before the receiver has a new group description to correspond to the initiator of the prekey handshake.
 
-The authentication is based on the SIGMA[^sigma] key authentication scheme. When a prekey1 is initially sent, it has a signature that is used by the other party to attest to the legitamacy of the prekey session request, but is not used for any other purpose. A monotonic nonce is sent by the initiating party to prevent replay attacks. The initiating party maintains a nonce that is unique to both parties. The nonce used by MUST be greater than any previous successfully used nonce. Any prekey1 sent with an older nonce SHOULD be ignored. Both parties MUST pick unique ephemeral keys, that is, not reuse any previously used key.
+The authentication is based on the SIGMA[^sigma] key authentication scheme. When a prekey1 is initially sent, it has a signature that is used by the other party to attest to the legitamacy of the prekey session request, but is not used for any other purpose. A monotonic nonce is sent by the initiating party to prevent replay attacks. The initiating party maintains a nonce that is unique to both parties. The nonce used by MUST be greater than any previous successfully used nonce. As well, the nonce MUST be identical through out the handshake and implementors should verify this. Any prekey1 sent with an older nonce SHOULD be ignored. Both parties MUST pick unique ephemeral keys, that is, not reuse any previously used key.
 
 ```
 ^      = dh operation using X25519
@@ -434,13 +435,13 @@ p1+desc, p2+desc               = the [group description](#113-group-description)
            sig3=sign(s1, hmac(s, n || id1 || e2+pub || e1+pub))
 4          [prekey pass4](#1120-prekey-pass4)
      <---- n
-           d1=sym(k2, p2+desc)
+           d1=sym(k2, serialized prekey inner for p2+desc)
 5          [prekey pass5](#1121-prekey-pass5)
      ----> n
-           d2=sym(k1, p1+desc)
+           d2=sym(k1, serialized prekey inner for p1+desc)
 ```
 
-The group description sent MUST be a full copy of the description. This is used as a basis for further merges within that SESSION. Failure to send a full description could lead to an inconsistent state.
+[Prekey inner](#1122-prekey-inner) is used for representing the serialized data for stage 4 and 5, and MUST be validly signed by the intro key of the sending party. The group description sent MUST be a full copy of the description. This is used as a basis for further merges within that SESSION. Failure to send a full description could lead to an inconsistent state.
 
 To determine which ephemeral key to use as an input to the double ratchet, both ephemeral keys are sorted lexicographically. Then, `hmac(e2 ^ e1+pub, "PREKEY_SELECT_KEY")` is calculated. If the first bit is 0, the first key is used, otherwise, the second key is used. The session key used as an input is `hmac(e2 ^ e1+pub, "PREKEY_SESSION_KEY")`.
 
@@ -450,23 +451,23 @@ All messages sent are encoded using an [envelope](#117-envelope). An envelope ca
 
 ### 7.1. Group messages
 
-Group messages are messages from a specific MEMBERSHIP to all other members of the GROUP. Group messages use [group message](#1122-group-message) for serialization. Group messages are sent by encrypting it for every member of the group and sending it individually to each member. Group messages can also be sent via the DEVICE GROUP which is detailed in [9. Device group](#9-device-group).
+Group messages are messages from a specific MEMBERSHIP to all other members of the GROUP. Group messages use [group message](#1123-group-message) for serialization. Group messages are sent by encrypting it for every member of the group and sending it individually to each member. Group messages can also be sent via the DEVICE GROUP which is detailed in [9. Device group](#9-device-group).
 
 Group messages contain any number of bodies. Group messages also contain metadata relating to the gossip of description changes, along with message acks for the receiver for both group messages and private messages. Group messages also contain any number of private messages and repair messages.
 
 #### 7.1.1. Group message body
 
-Group messages contain any number of group message bodies. These use [group message body](#1123-group-message-body) for serialization. Group messages contain byte sequence which MUST be interpreted as a bencode serialized [application message](#1124-application-message), or if sent to the DEVICE GROUP MUST be interpreted as a [device group application message](#1125-device-group-application-message). The [device group application message](#1125-device-group-application-message) also includes a group id which allows messages to be sent to any GROUP.
+Group messages contain any number of group message bodies. These use [group message body](#1124-group-message-body) for serialization. Group messages contain byte sequence which MUST be interpreted as a bencode serialized [application message](#1125-application-message), or if sent to the DEVICE GROUP MUST be interpreted as a [device group application message](#1126-device-group-application-message). The [device group application message](#1126-device-group-application-message) also includes a group id which allows messages to be sent to any GROUP.
 
-The [application message](#1124-application-message) or [device group application message](#1125-device-group-application-message) includes a name field which indicates how the message should be handled. The only valid value for this field is `eav`. These messages pertain to [8. Database](#8-database) as detailed below.
+The [application message](#1125-application-message) or [device group application message](#1126-device-group-application-message) includes a name field which indicates how the message should be handled. The only valid value for this field is `eav`. These messages pertain to [8. Database](#8-database) as detailed below.
 
 Group messages have a sequence number maintained by the MEMBERSHIP they are sent from and implementors MUST use a monotonically increasing sequence number starting from 1.
 
-Group messages also contain a dictionary of unhandled recipients. The key on this dictionary is the identity id and the value is a lexicographically sorted list of membership ids. If receivers of this message have an established session, they MUST send [repair message](#1129-repair-message)s to all recipients either not included in the group description or listed as unhandled recipients.
+Group messages also contain a dictionary of unhandled recipients. The key on this dictionary is the identity id and the value is a lexicographically sorted list of membership ids. If receivers of this message have an established session, they MUST send [repair message](#1130-repair-message)s to all recipients either not included in the group description or listed as unhandled recipients.
 
 #### 7.1.2. Private messages
 
-Private messages are messages that only pertain to a single member of a group. Private messages use [private message](#1131-private-message) for serialization. Private messages also have a sequence number which is maintained by the sender for every other member of a group.
+Private messages are messages that only pertain to a single member of a group. Private messages use [private message](#1132-private-message) for serialization. Private messages also have a sequence number which is maintained by the sender for every other member of a group.
 
 Private messages either pertain to backfills, the sending of existing data so that each member of the group can catch up to previously written messages, or a repair message.
 
@@ -490,19 +491,19 @@ p2         = party 2 (backfill sink)
 6     ---> backfill complete --->
 ```
 
-Backfill requests have a random 16-byte id which the backfill source uses when responding with either backfill start, backfill body, backfill complete or backfill abort messages. Backfill requests use [backfill request](#1132-backfill-request) for serialization. Backfill sources can also send a [backfill abort](#1138-backfill-abort) message in response to any request, and all further messages pertaining to that backfill SHOULD be ignored.
+Backfill requests have a random 16-byte id which the backfill source uses when responding with either backfill start, backfill body, backfill complete or backfill abort messages. Backfill requests use [backfill request](#1133-backfill-request) for serialization. Backfill sources can also send a [backfill abort](#1139-backfill-abort) message in response to any request, and all further messages pertaining to that backfill SHOULD be ignored.
 
-Backfill start messages use [backfill start](#1133-backfill-start) for serialization. Backfill start messages include the acks from the backfill source from the time the backfill began.
+Backfill start messages use [backfill start](#1134-backfill-start) for serialization. Backfill start messages include the acks from the backfill source from the time the backfill began.
 
-Backfill body messages use [backfill](#1136-backfill) for serialization. Backfill body messages represent the data comprising the backfill itself. The data represented by the body is discussed in further detail under [8.1. Backfill bodies](#81-backfill-bodies). These messages include a `total` field indicating the number of expected backfill body messages expected for this backfill. This field is strictly informational.
+Backfill body messages use [backfill](#1137-backfill) for serialization. Backfill body messages represent the data comprising the backfill itself. The data represented by the body is discussed in further detail under [8.1. Backfill bodies](#81-backfill-bodies). These messages include a `total` field indicating the number of expected backfill body messages expected for this backfill. This field is strictly informational.
 
-Backfill complete messages use [backfill complete](#1137-backfill-complete) for serialization. The backfill complete message includes a `total` number of backfill body messages expected for this backfill. This number is considered authoritative and backfill sinks MUST receive this number of backfill body messages before the backfill is considered complete.
+Backfill complete messages use [backfill complete](#1138-backfill-complete) for serialization. The backfill complete message includes a `total` number of backfill body messages expected for this backfill. This number is considered authoritative and backfill sinks MUST receive this number of backfill body messages before the backfill is considered complete.
 
 Implementors of this protocol MAY take into account if this backfill is coming from a session belonging to the IDENTITY of the requesting MEMBERSHIP. If it is, it may include data that is only applicable to members within the same IDENTITY. In the case of database detailed in [8. Database](#8-database), keys with a `_self_` prefix MUST be included in the backfill if this is the case.
 
 ##### 7.1.2.2. Repair message
 
-Group message bodies that cannot be sent normally are included as private messages. These messages use [repair message](#1129-repair-message).
+Group message bodies that cannot be sent normally are included as private messages. These messages use [repair message](#1130-repair-message).
 
 ### 7.2. Acks
 
@@ -516,7 +517,7 @@ sparse: 0b11010010         0b11011000
 
 ### 7.3. Lost messages
 
-Private or group messages inferred to be unacked based on received acks can be re-included in the group message as a [lost message](#1130-lost-message). Only messages that have not been acked should be included as lost messages.
+Private or group messages inferred to be unacked based on received acks can be re-included in the group message as a [lost message](#1131-lost-message). Only messages that have not been acked should be included as lost messages.
 
 #### 7.3.1. Removing users and rejoining
 
@@ -524,7 +525,7 @@ Users who have not acked messages recently or have accumulated too many lost mes
 
 ## 8. Database
 
-Application messages labeled with "eav" contain data with an entity-attribute-value model[^eav]. Conflicts are resolved with a last-write-wins strategy. This data is serialized using [eav operations](#1139-eav-operations). The structure of eav operations look approximately like:
+Application messages labeled with "eav" contain data with an entity-attribute-value model[^eav]. Conflicts are resolved with a last-write-wins strategy. This data is serialized using [eav operations](#1140-eav-operations). The structure of eav operations look approximately like:
 
 ```
 names:
@@ -551,13 +552,13 @@ I = identity tag
 M = membership tag
 ```
 
-Names beginning with `_` are reserved. If the name is prefixed with `_self_`, then this indicates these writes are only intended for other members of the user's device group. These changes MUST be sent as [device group application message](#1125-device-group-application-message) messages. If the name is prefixed with `_private_` then this indicates these writes are only intended for the current device. These writes MUST NOT be sent to other members. Any other prefix beginning with `_` is invalid and MUST be ignored.
+Names beginning with `_` are reserved. If the name is prefixed with `_self_`, then this indicates these writes are only intended for other members of the user's device group. These changes MUST be sent as [device group application message](#1126-device-group-application-message) messages. If the name is prefixed with `_private_` then this indicates these writes are only intended for the current device. These writes MUST NOT be sent to other members. Any other prefix beginning with `_` is invalid and MUST be ignored.
 
-Values are always encoded as [value](#1140-value), which is a byte sequence that can also represent a null value. Values MUST NOT include data if they are also marked as null. It is recommended that for strings, UTF-8 encoding is used. For floats ascii-encoded values are used.
+Values are always encoded as [value](#1141-value), which is a byte sequence that can also represent a null value. Values MUST NOT include data if they are also marked as null. It is recommended that for strings, UTF-8 encoding is used. For floats ascii-encoded values are used.
 
 ### 8.1. Backfill bodies
 
-EAV backfills have a special structure. They are serialized using [eav backfill](#1141-eav-backfill). They contain two fields: a list of names and a list of byte sequences. Those byte sequences are packed in the following way:
+EAV backfills have a special structure. They are serialized using [eav backfill](#1142-eav-backfill). They contain two fields: a list of names and a list of byte sequences. Those byte sequences are packed in the following way:
 
 ```
 IIII IIII TTTT TTTT NNNN F(V*)
@@ -573,7 +574,7 @@ Flags MUST contain a value of 0x1 if value is present. Rows with flags is 0x0 an
 
 ## 9. Device group
 
-The DEVICE GROUP is a special group which comprises all the devices belonging to a single user. This group has a reserved id which is the zero value for a 16-byte sequence. Device groups use the [device group application message](#1125-device-group-application-message) to send data.
+The DEVICE GROUP is a special group which comprises all the devices belonging to a single user. This group has a reserved id which is the zero value for a 16-byte sequence. Device groups use the [device group application message](#1126-device-group-application-message) to send data.
 
 Devices joining this group SHOULD write their current group memberships with the following names and values:
 
@@ -868,7 +869,7 @@ What follows is a description of all bencode-encoded data structures used in thi
 
 ```
 {
-  "s": bytes(64)                                   // Ed25519 signature of identity_id || membership_id || desc
+  "s": bytes(64)                                   // Ed25519 signature of identity_id || membership_id || description
   "i": bytes(16)                                   // identity id
   "m": bytes(16)                                   // membership id
   "d": [group description](#113-group-description) // description of group
@@ -922,11 +923,20 @@ What follows is a description of all bencode-encoded data structures used in thi
 }
 ```
 
-### 11.22. group message
+### 11.22. prekey inner
 
 ```
 {
-  "b": [group message body](#1123-group-message-body)
+  "s": bytes(64)                                   // Ed25519 signature of identity_id || membership_id || description
+  "d": [group description](#113-group-description) // description of group
+}
+```
+
+### 11.23. group message
+
+```
+{
+  "b": [group message body](#1124-group-message-body)
   "gs": number                // group ack seq
   "gss": bytes                // group ack sparse
   "ps": number                // private ack seq
@@ -935,12 +945,12 @@ What follows is a description of all bencode-encoded data structures used in thi
   "gc": bytes                 // group changes, bencode-encoded [group description](#113-group-description)
   "gcs": bytes                // if there are group changes present, this is a signature for the bytes in "gc"
   "nd": bytes                 // new digest, if would be the same as "bd", send zero-length blob
-  "m": [private message](#1131-private-message)    // private messages
-  "l": [lost message](#1130-lost-message)       // lost messages
+  "m": [private message](#1132-private-message)    // private messages
+  "l": [lost message](#1131-lost-message)       // lost messages
 }
 ```
 
-### 11.23. group message body
+### 11.24. group message body
 
 ```
 {
@@ -952,7 +962,7 @@ What follows is a description of all bencode-encoded data structures used in thi
 }
 ```
 
-### 11.24. application message
+### 11.25. application message
 
 ```
 {
@@ -961,7 +971,7 @@ What follows is a description of all bencode-encoded data structures used in thi
 }
 ```
 
-### 11.25. device group application message
+### 11.26. device group application message
 
 ```
 {
@@ -971,7 +981,7 @@ What follows is a description of all bencode-encoded data structures used in thi
 }
 ```
 
-### 11.26. heya envelope
+### 11.27. heya envelope
 
 ```
 {
@@ -980,7 +990,7 @@ What follows is a description of all bencode-encoded data structures used in thi
 }
 ```
 
-### 11.27. heya interior envelope
+### 11.28. heya interior envelope
 
 ```
 {
@@ -989,7 +999,7 @@ What follows is a description of all bencode-encoded data structures used in thi
 }
 ```
 
-### 11.28. ratchet message
+### 11.29. ratchet message
 
 ```
 {
@@ -1000,7 +1010,7 @@ What follows is a description of all bencode-encoded data structures used in thi
 }
 ```
 
-### 11.29. repair message
+### 11.30. repair message
 
 ```
 {
@@ -1011,7 +1021,7 @@ What follows is a description of all bencode-encoded data structures used in thi
 }
 ```
 
-### 11.30. lost message
+### 11.31. lost message
 
 ```
 {
@@ -1024,7 +1034,7 @@ What follows is a description of all bencode-encoded data structures used in thi
 //  1 (group)
 ```
 
-### 11.31. private message
+### 11.32. private message
 
 ```
 {
@@ -1042,7 +1052,7 @@ What follows is a description of all bencode-encoded data structures used in thi
 //  5 (repair message)
 ```
 
-### 11.32. backfill request
+### 11.33. backfill request
 
 ```
 {
@@ -1055,28 +1065,28 @@ What follows is a description of all bencode-encoded data structures used in thi
 //  1 (partial)
 ```
 
-### 11.33. backfill start
+### 11.34. backfill start
 
 ```
 {
   "i": bytes(32) // id
-  "a": [group acks](#1134-group-acks)
+  "a": [group acks](#1135-group-acks)
 }
 ```
 
-### 11.34. group acks
+### 11.35. group acks
 
 ```
 {
   "a": {
     bytes: { // identity id
-      bytes: [ack](#1135-ack) // key is membership id
+      bytes: [ack](#1136-ack) // key is membership id
     }
   }
 }
 ```
 
-### 11.35. ack
+### 11.36. ack
 
 ```
 {
@@ -1085,7 +1095,7 @@ What follows is a description of all bencode-encoded data structures used in thi
 }
 ```
 
-### 11.36. backfill
+### 11.37. backfill
 
 ```
 {
@@ -1095,7 +1105,7 @@ What follows is a description of all bencode-encoded data structures used in thi
 }
 ```
 
-### 11.37. backfill complete
+### 11.38. backfill complete
 
 ```
 {
@@ -1104,7 +1114,7 @@ What follows is a description of all bencode-encoded data structures used in thi
 }
 ```
 
-### 11.38. backfill abort
+### 11.39. backfill abort
 
 ```
 {
@@ -1112,7 +1122,7 @@ What follows is a description of all bencode-encoded data structures used in thi
 }
 ```
 
-### 11.39. eav operations
+### 11.40. eav operations
 
 ```
 {
@@ -1120,14 +1130,14 @@ What follows is a description of all bencode-encoded data structures used in thi
   "m": {
     number: { // time in microseconds
       bytes(16): { // id
-        number: [value](#1140-value) // key is index in names
+        number: [value](#1141-value) // key is index in names
       }
     }
   }
 }
 ```
 
-### 11.40. value
+### 11.41. value
 
 ```
 {
@@ -1136,7 +1146,7 @@ What follows is a description of all bencode-encoded data structures used in thi
 }
 ```
 
-### 11.41. eav backfill
+### 11.42. eav backfill
 
 ```
 {
