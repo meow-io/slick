@@ -425,7 +425,7 @@ p1+desc, p2+desc               = the [group description](#113-group-description)
 1          [prekey pass1](#1117-prekey-pass1)
      ----> e1+pub
            n
-           sig1=sign(s1, n || id1 || id2)
+           sig1=sign(s1, n || id1 || id2 || e1+pub)
 2          [prekey pass2](#1118-prekey-pass2)
      <---- e2+pub
            n
