@@ -329,7 +329,7 @@ A SESSION is used to encrypt all messages sent between members using any of the 
 
 Each member of a SESSION maintains a sequence number which is used when sending messages directly between them. As well, each member maintains a record of which messages have been acked by the other member. Each member must also retain the last group description sent by the other party.
 
-In the event of a SESSION already being established between two MEMBERSHIPS, any further attempts to initiate a SESSION SHOULD be ignored. Failure to do would allow the SESSION to be hijacked in the case where a private intro key is lost.
+If any stage of either handshake fails, implementors SHOULD ignore that error and allow further attempts. Failure to do so would allow a deny-of-service by sending invalid messages during the handshake process. In the event of a SESSION already being established between two MEMBERSHIPS, any further attempts to initiate a SESSION SHOULD be ignored. Failure to do would allow the SESSION to be hijacked in the case where a private intro key is lost.
 
 #### 6.5.1. Jpake handshake
 
