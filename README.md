@@ -1,4 +1,8 @@
-# Slick v1
+# Slick v0
+
+# 🚧 Under Construction 🚧
+
+This spec is still under active development and shouldn't be relied on to be stable until it is marked as v1.
 
 <!-- TOC -->
 - [1. Overview](#1-overview)
