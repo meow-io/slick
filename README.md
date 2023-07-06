@@ -42,7 +42,6 @@ This spec is still under active development and shouldn't be relied on to be sta
   - [7.3. Lost messages](#73-lost-messages)
     - [7.3.1. Removing users and rejoining](#731-removing-users-and-rejoining)
 - [8. Database](#8-database)
-  - [8.1. Backfill bodies](#81-backfill-bodies)
 - [9. Device group](#9-device-group)
 - [10. Security considerations](#10-security-considerations)
   - [10.1. Server](#101-server)
@@ -97,7 +96,6 @@ This spec is still under active development and shouldn't be relied on to be sta
   - [11.39. backfill abort](#1139-backfill-abort)
   - [11.40. eav operations](#1140-eav-operations)
   - [11.41. value](#1141-value)
-  - [11.42. eav backfill](#1142-eav-backfill)
 - [12. References](#12-references)
 <!-- /TOC -->
 
@@ -499,7 +497,7 @@ Backfill requests have a random 16-byte id which the backfill source uses when r
 
 Backfill start messages use [backfill start](#1134-backfill-start) for serialization. Backfill start messages include the acks from the backfill source from the time the backfill began.
 
-Backfill body messages use [backfill](#1137-backfill) for serialization. Backfill body messages represent the data comprising the backfill itself. The data represented by the body is discussed in further detail under [8.1. Backfill bodies](#81-backfill-bodies). These messages include a `total` field indicating the number of expected backfill body messages expected for this backfill. This field is strictly informational.
+Backfill body messages use [backfill](#1137-backfill) for serialization. Backfill body messages represent the data comprising the backfill itself. Backfill body messages are serialized using [eav operations](#1140-eav-operations). These messages include a `total` field indicating the number of expected backfill body messages expected for this backfill. This field is strictly informational.
 
 Backfill complete messages use [backfill complete](#1138-backfill-complete) for serialization. The backfill complete message includes a `total` number of backfill body messages expected for this backfill. This number is considered authoritative and backfill sinks MUST receive this number of backfill body messages before the backfill is considered complete.
 
@@ -559,22 +557,6 @@ M = membership tag
 Names beginning with `_` are reserved. If the name is prefixed with `_self_`, then this indicates these writes are only intended for other members of the user's device group. These changes MUST be sent as [device group application message](#1126-device-group-application-message) messages. If the name is prefixed with `_private_` then this indicates these writes are only intended for the current device. These writes MUST NOT be sent to other members. Any other prefix beginning with `_` is invalid and MUST be ignored.
 
 Values are always encoded as [value](#1141-value), which is a byte sequence that can also represent a null value. Values MUST NOT include data if they are also marked as null. It is recommended that for strings, UTF-8 encoding is used. For floats ascii-encoded values are used.
-
-### 8.1. Backfill bodies
-
-EAV backfills have a special structure. They are serialized using [eav backfill](#1142-eav-backfill). They contain two fields: a list of names and a list of byte sequences. Those byte sequences are packed in the following way:
-
-```
-IIII IIII TTTT TTTT NNNN F(V*)
-
-I = id   (big endian uint64)
-T = time (big endian uint64)
-N = name (big endian uint32, index corresponding to the list of names)
-F = flags
-V* = value (0 or more bytes)
-```
-
-Flags MUST contain a value of 0x1 if value is present. Rows with flags is 0x0 and value is present are invalid. If flags is 0 the value is considered undefined.
 
 ## 9. Device group
 
@@ -1105,7 +1087,7 @@ What follows is a description of all bencode-encoded data structures used in thi
 {
   "i": bytes  // id
   "t": number // total
-  "b": bytes  // body
+  "b": bytes  // body, serialized [eav operations](#1140-eav-operations)
 }
 ```
 
@@ -1145,17 +1127,8 @@ What follows is a description of all bencode-encoded data structures used in thi
 
 ```
 {
-  "p": number // present, either 0 or 1
+  "n": number // not-null, either 0 or 1
   "b": bytes // value body
-}
-```
-
-### 11.42. eav backfill
-
-```
-{
-  "n": string[] // names
-  "d": byte[][] // data
 }
 ```
 
